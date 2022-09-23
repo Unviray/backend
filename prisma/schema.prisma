@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Group {
+  id       Int        @id @default(autoincrement())
+  Preacher Preacher[]
+}
+
+model Tag {
+  id        Int              @id @default(autoincrement())
+  name      String           @unique
+  color     String           @unique @default("#000000")
+  Report    Report[]
+  Preachers TagsOnPreacher[]
+}
+
+model Preacher {
+  id          Int              @id @default(autoincrement())
+  displayName String           @unique
+  fullName    String           @unique
+  firstName   String
+  lastName    String?
+  phones      String
+  address     String?
+  birth       DateTime?
+  baptism     DateTime?
+  Group       Group            @relation(fields: [groupId], references: [id])
+  groupId     Int
+  Report      Report[]
+  Tags        TagsOnPreacher[]
+}
+
+model TagsOnPreacher {
+  Preacher   Preacher @relation(fields: [preacherId], references: [id])
+  preacherId Int
+  Tag        Tag      @relation(fields: [tagId], references: [id])
+  tagId      Int
+  startMonth Int?
+  startYear  Int?
+  endMonth   Int?
+  endYear    Int?
+
+  @@id([preacherId, tagId])
+}
+
+model Report {
+  id          Int      @id @default(autoincrement())
+  Preacher    Preacher @relation(fields: [preacherId], references: [id])
+  preacherId  Int
+  month       Int
+  year        Int
+  publication Int      @default(0)
+  video       Int      @default(0)
+  hour        Float    @default(0)
+  visit       Int      @default(0)
+  study       Int      @default(0)
+  note        String?
+  Tags        Tag[]
+}
