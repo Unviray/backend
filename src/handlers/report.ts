@@ -88,51 +88,58 @@ export const setReport = async (
     return;
   }
 
+  const data = {
+    publication: req.body.publication,
+    video: req.body.video,
+    hour: req.body.hour,
+    visit: req.body.visit,
+    study: req.body.study,
+    note: req.body.note,
+    Tags: {
+      connect: req.body.tagIds.map((tagId) => ({
+        id: tagId,
+      })),
+    },
+  };
+
   const existing = await prisma.report.findFirst({
     include: { Tags: true },
     where: { month, year, preacherId },
   });
 
-  const result = await prisma.report.upsert({
-    where: {
-      id: existing?.id || undefined,
-    },
-    update: {
-      publication: req.body.publication,
-      video: req.body.video,
-      hour: req.body.hour,
-      visit: req.body.visit,
-      study: req.body.study,
-      note: req.body.note,
-      Tags: {
-        connect: req.body.tagIds.map((tagId) => ({
-          id: tagId,
-        })),
+  if (existing !== null) {
+    const result = await prisma.report.update({
+      where: {
+        id: existing.id,
       },
-    },
-    create: {
-      Preacher: {
-        connect: {
-          id: preacherId,
-        },
+      include: {
+        Preacher: true,
+        Tags: true,
       },
-      month,
-      year,
-      publication: req.body.publication,
-      video: req.body.video,
-      hour: req.body.hour,
-      visit: req.body.visit,
-      study: req.body.study,
-      note: req.body.note,
-      Tags: {
-        connect: req.body.tagIds.map((tagId) => ({
-          id: tagId,
-        })),
-      },
-    },
-  });
+      data,
+    });
 
-  res.json(result);
+    res.json(result);
+  } else {
+    const result = await prisma.report.create({
+      include: {
+        Preacher: true,
+        Tags: true,
+      },
+      data: {
+        Preacher: {
+          connect: {
+            id: preacherId,
+          },
+        },
+        month,
+        year,
+        ...data,
+      },
+    });
+
+    res.json(result);
+  }
 };
 
 export const mainBoard = async (req: Request, res: Response) => {

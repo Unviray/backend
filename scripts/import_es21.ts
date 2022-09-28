@@ -207,6 +207,7 @@ const create_preacher = async (id: string, data: Es21) => {
   try {
     const preacher = await prisma.preacher.create({
       data: {
+        id: parseInt(id),
         displayName:
           (data as Es21).anarana_feno ||
           `${data.anarana} ${data.fanampinanarana}`,
@@ -253,7 +254,9 @@ const create_preacher = async (id: string, data: Es21) => {
 };
 
 async function main() {
+  console.log("Importing");
   for (const [id, data] of Object.entries(es21db._default)) {
+    console.log("importing: ", id);
     await create_preacher(id, data);
   }
 }

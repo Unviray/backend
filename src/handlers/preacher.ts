@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import moment from "moment";
+
 import { getWorkingMonth } from "../store/working-month";
 
 const prisma = new PrismaClient();
@@ -15,7 +17,7 @@ export const getAllPreacher = (
       where: { fullName: { contains: search } },
     })
     .then((preachers) => {
-      res.json(preachers.map((preacher) => preacher.id));
+      res.json(preachers.map((preacher) => preacher.id).sort((a, b) => a - b));
     });
 };
 
@@ -68,6 +70,86 @@ export const getPreacher = async (
       tags,
     });
   }
+};
+
+export const setPreacher = async (
+  req: Request<
+    { id: string },
+    {},
+    {
+      id: number;
+      group: number;
+      firstname: string;
+      lastname: string;
+      displayname: string;
+      birth: string | null;
+      baptism: string | null;
+      address: string;
+      phones: string[];
+      tagIds: number[];
+    }
+  >,
+  res: Response
+) => {
+  const { id: targetId } = req.params;
+
+  const result = await prisma.preacher.upsert({
+    include: {
+      Tags: true,
+      Group: true,
+    },
+    where: {
+      id: parseInt(targetId), //parseInt
+    },
+    create: {
+      id: req.body.id,
+      firstName: req.body.firstname,
+      lastName: req.body.lastname,
+      fullName: `${req.body.firstname} ${req.body.lastname}`,
+      displayName: req.body.displayname,
+      address: req.body.address,
+      baptism:
+        req.body.baptism !== null ? moment(req.body.baptism).toDate() : null,
+      birth: req.body.birth !== null ? moment(req.body.birth).toDate() : null,
+      phones: JSON.stringify(req.body.phones),
+      Tags: {
+        create: req.body.tagIds.map((tagId) => ({
+          Tag: {
+            connect: {
+              id: tagId,
+            },
+          },
+        })),
+      },
+      Group: {
+        connectOrCreate: {
+          where: { id: req.body.group },
+          create: { id: req.body.group },
+        },
+      },
+    },
+    update: {
+      id: req.body.id,
+      firstName: req.body.firstname,
+      lastName: req.body.lastname,
+      fullName: `${req.body.firstname} ${req.body.lastname}`,
+      displayName: req.body.displayname,
+      //phones: JSON.stringify(req.body.phones),
+      address: req.body.address,
+      baptism:
+        req.body.baptism !== null ? moment(req.body.baptism).toDate() : null,
+      birth: req.body.birth !== null ? moment(req.body.birth).toDate() : null,
+      phones: JSON.stringify(req.body.phones),
+      Group: {
+        connectOrCreate: {
+          where: { id: req.body.group },
+          create: { id: req.body.group },
+        },
+      },
+    },
+  });
+
+  res.json(result);
 };
 
 export const getReturnedInfo = (req: Request, res: Response) => {

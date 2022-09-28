@@ -1,4 +1,4 @@
-import type { NextFunction, Request, Response } from "express";
+import express from "express";
 
 import morgan from "morgan";
 import cors from "cors";
@@ -33,4 +33,5 @@ export default [
   }),
 
   cors(),
+  express.json(),
 ];
