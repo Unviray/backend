@@ -2,6 +2,9 @@ import type { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import moment from "moment";
 
+import type { TMonthNumbers, TWorkingMonth } from "../types/month";
+import { Month } from "../month";
+
 const prisma = new PrismaClient();
 
 export const getAllPreacher = (
@@ -51,14 +54,57 @@ export const getPreacher = async (
     res.status(404).json({ error: `No preacher have id ${id}` });
   } else {
     const wm = req.app.get("workingMonth");
-    const tags: { id: number; name: string; color: string }[] = [];
+    const tags: {
+      id: number;
+      name: string;
+      color: string;
+      soon?: {
+        start: TWorkingMonth;
+        end: TWorkingMonth;
+      };
+      current?: {
+        start: TWorkingMonth;
+        end: TWorkingMonth;
+      };
+    }[] = [];
 
     for (const tag of preacher.Tags) {
       const tagResult = await prisma.tag.findUnique({
         where: { id: tag.tagId },
       });
+
+      const Wm = new Month(wm);
+
+      const soon =
+        tag.startMonth &&
+        Wm.nextMonth().month === tag.startMonth &&
+        Wm.nextMonth().year === tag.startYear
+          ? {
+              start: {
+                month: tag.startMonth as TMonthNumbers,
+                year: tag.startYear!,
+              },
+              end: { month: tag.endMonth as TMonthNumbers, year: tag.endYear! },
+            }
+          : undefined;
+
+      const current =
+        tag.startMonth &&
+        Wm.between(
+          { month: tag.startMonth as TMonthNumbers, year: tag.startYear! },
+          { month: tag.endMonth as TMonthNumbers, year: tag.endYear! }
+        )
+          ? {
+              start: {
+                month: tag.startMonth as TMonthNumbers,
+                year: tag.startYear!,
+              },
+              end: { month: tag.endMonth as TMonthNumbers, year: tag.endYear! },
+            }
+          : undefined;
+
       if (tagResult !== null) {
-        tags.push(tagResult);
+        tags.push({ ...tagResult, soon, current });
       }
     }
 
