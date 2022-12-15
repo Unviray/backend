@@ -57,7 +57,7 @@ export class Month {
     start: TWorkingMonth,
     end: TWorkingMonth,
     startInclusif = true,
-    endInclusif = false
+    endInclusif = true
   ) {
     return (
       this.greaterThan(start, startInclusif) && this.lessThan(end, endInclusif)

@@ -104,7 +104,13 @@ export const getPreacher = async (
           : undefined;
 
       if (tagResult !== null) {
-        tags.push({ ...tagResult, soon, current });
+        if (tag.startMonth) {
+          if (soon || current) {
+            tags.push({ ...tagResult, soon, current });
+          }
+        } else {
+          tags.push(tagResult);
+        }
       }
     }
 
