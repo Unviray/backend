@@ -8,13 +8,11 @@ import {
 } from "@prisma/client";
 
 import type { TWorkingMonth } from "../types/month";
-import { getWorkingMonth } from "../store/working-month";
 import { MonthNames, MonthNamesShort } from "../constant/month";
 
 const prisma = new PrismaClient();
 
-const makeServiceYears = (): TWorkingMonth[] => {
-  const wm = getWorkingMonth();
+const makeServiceYears = (wm: TWorkingMonth): TWorkingMonth[] => {
   const endPrev = wm.month >= 9;
 
   return [
@@ -154,7 +152,7 @@ export const mainBoard = async (req: Request, res: Response) => {
   }[] = [];
 
   const reports = await prisma.report.findMany({
-    where: getWorkingMonth(),
+    where: req.app.get("workingMonth"),
     include: {
       Preacher: {
         include: {
@@ -231,7 +229,7 @@ export const getServiceYear = async (
   req: Request<{}, {}, {}, { id: string }>,
   res: Response
 ) => {
-  const serviceYears = makeServiceYears();
+  const serviceYears = makeServiceYears(req.app.get("workingMonth"));
   const id = parseInt(req.query.id || "0");
 
   const result = [];
@@ -278,7 +276,7 @@ export const getReturnedService = async (
   res: Response
 ) => {
   const id = parseInt(req.params.id) || 0;
-  const serviceYears = makeServiceYears();
+  const serviceYears = makeServiceYears(req.app.get("workingMonth"));
 
   const result: { label: string; returned: boolean }[] = [];
 
@@ -351,7 +349,7 @@ export const summary = (req: Request, res: Response) => {
   };
 
   const monthFilter = (report: ReturnType<typeof mapReport>) => {
-    const { month, year } = getWorkingMonth();
+    const { month, year } = req.app.get("workingMonth");
 
     return report.month === month - 1 && report.year === year;
   };

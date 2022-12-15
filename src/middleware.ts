@@ -34,4 +34,5 @@ export default [
 
   cors(),
   express.json(),
+  express.static("public"),
 ];

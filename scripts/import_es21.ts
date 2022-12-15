@@ -218,9 +218,9 @@ const create_preacher = async (id: string, data: Es21) => {
         firstName: data.fanampinanarana,
         phones: JSON.stringify(data.finday.filter((f) => f.length > 0)),
         address: data.adiresy,
-        birth: data.teraka ? moment(data.teraka.split(":")[1]).toDate() : null,
+        birth: data.teraka ? moment.utc(data.teraka.split(":")[1]).toDate() : null,
         baptism: data.batisa
-          ? moment(data.batisa.split(":")[1]).toDate()
+          ? moment.utc(data.batisa.split(":")[1]).toDate()
           : null,
         Group: {
           connectOrCreate: {
@@ -272,4 +272,4 @@ main()
     await prisma.$disconnect();
   });
 
-export const sreport = app;
+export { app };

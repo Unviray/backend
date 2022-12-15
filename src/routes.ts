@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Get } from "tsoa";
 
 import {
   getAllPreacher,

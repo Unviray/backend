@@ -2,22 +2,32 @@ import type { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import moment from "moment";
 
-import { getWorkingMonth } from "../store/working-month";
-
 const prisma = new PrismaClient();
 
 export const getAllPreacher = (
-  req: Request<{}, {}, {}, { search: string }>,
+  req: Request<{}, {}, {}, { search: string; tags?: string }>,
   res: Response
 ) => {
-  const { search } = req.query;
+  const { search, tags } = req.query;
+
   prisma.preacher
     .findMany({
-      select: { id: true },
       where: { fullName: { contains: search } },
+      include: { Tags: true },
     })
     .then((preachers) => {
-      res.json(preachers.map((preacher) => preacher.id).sort((a, b) => a - b));
+      res.json(
+        preachers
+          .filter((preacher) =>
+            tags
+              ? preacher.Tags.map((tag) => tag.tagId).some((tagId) =>
+                  tags.split(",").includes(tagId.toString(10))
+                )
+              : true
+          )
+          .map((preacher) => preacher.id)
+          .sort((a, b) => a - b)
+      );
     });
 };
 
@@ -40,7 +50,7 @@ export const getPreacher = async (
   if (preacher === null) {
     res.status(404).json({ error: `No preacher have id ${id}` });
   } else {
-    const wm = getWorkingMonth();
+    const wm = req.app.get("workingMonth");
     const tags: { id: number; name: string; color: string }[] = [];
 
     for (const tag of preacher.Tags) {
@@ -153,7 +163,7 @@ export const setPreacher = async (
 };
 
 export const getReturnedInfo = (req: Request, res: Response) => {
-  const workingMonth = getWorkingMonth();
+  const workingMonth = req.app.get("workingMonth");
   prisma.preacher.findMany({ include: { Report: true } }).then((preachers) => {
     let returned = 0;
 

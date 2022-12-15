@@ -1,19 +1,18 @@
 import type { Request, Response } from "express";
 
 import { MonthNames, MonthNamesShort } from "../constant/month";
-import { getWorkingMonth, setWorkingMonth } from "../store/working-month";
 import { TWorkingMonth } from "../types/month";
 
 export const workingMonth = (req: Request, res: Response) => {
-  res.json(getWorkingMonth());
+  res.json(req.app.get("workingMonth"));
 };
 
 export const workingMonthSet = (
   req: Request<{}, {}, TWorkingMonth>,
   res: Response
 ) => {
-  setWorkingMonth(req.body.month, req.body.year);
-  res.json(getWorkingMonth());
+  req.app.set("workingMonth", { month: req.body.month, year: req.body.year });
+  res.json(req.app.get("workingMonth"));
 };
 
 export const prettieWorkingMonth = (
@@ -21,7 +20,7 @@ export const prettieWorkingMonth = (
   res: Response
 ) => {
   const { format = "long" } = req.query;
-  const wm = getWorkingMonth();
+  const wm = req.app.get("workingMonth");
 
   if (format === "long") {
     res.json(`${MonthNames[wm.month - 1]} ${wm.year}`);

@@ -10,7 +10,7 @@ export default defineConfig({
   },
   plugins: [
     ...VitePluginNode({
-      exportName: "sreport",
+      exportName: "app",
       adapter: "express",
       appPath: importMode ? "./scripts/import_es21.ts" : "./src/index.ts",
     }),
