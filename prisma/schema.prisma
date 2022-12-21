@@ -37,6 +37,7 @@ model Preacher {
   groupId     Int
   Report      Report[]
   Tags        TagsOnPreacher[]
+  archived    Boolean
 }
 
 model TagsOnPreacher {

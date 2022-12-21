@@ -235,6 +235,7 @@ const create_preacher = async (id: string, data: Es21) => {
         Tags: {
           create: tags,
         },
+        archived: false,
       },
       include: {
         Group: true,

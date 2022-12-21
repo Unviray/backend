@@ -8,14 +8,22 @@ import { Month } from "../month";
 const prisma = new PrismaClient();
 
 export const getAllPreacher = (
-  req: Request<{}, {}, {}, { search: string; tags?: string }>,
+  req: Request<
+    {},
+    {},
+    {},
+    { search: string; tags?: string; archived?: string }
+  >,
   res: Response
 ) => {
-  const { search, tags } = req.query;
+  const { search, tags, archived } = req.query;
 
   prisma.preacher
     .findMany({
-      where: { fullName: { contains: search } },
+      where: {
+        fullName: { contains: search },
+        archived: archived === "1" ? true : false,
+      },
       include: { Tags: true },
     })
     .then((preachers) => {
@@ -134,80 +142,99 @@ export const getPreacher = async (
   }
 };
 
-export const setPreacher = async (
+export const updatePreacher = async (
   req: Request<
     { id: string },
     {},
     {
-      id: number;
-      group: number;
-      firstname: string;
-      lastname: string;
-      displayname: string;
-      birth: string | null;
-      baptism: string | null;
-      address: string;
-      phones: string[];
-      tagIds: number[];
+      id?: number;
+      group?: number;
+      firstname?: string;
+      lastname?: string;
+      displayname?: string;
+      birth?: string | null;
+      baptism?: string | null;
+      address?: string;
+      phones?: string[];
+      tagIds?: number[];
+      archived?: boolean;
     }
   >,
   res: Response
 ) => {
   const { id: targetId } = req.params;
 
-  const result = await prisma.preacher.upsert({
+  const result = await prisma.preacher.update({
     include: {
       Tags: true,
       Group: true,
     },
     where: {
-      id: parseInt(targetId), //parseInt
+      id: +targetId, //parseInt
     },
-    create: {
+    data: {
+      id: req.body.id,
+      firstName: req.body.firstname,
+      lastName: req.body.lastname,
+      fullName:
+        req.body.firstname && req.body.lastname
+          ? `${req.body.firstname} ${req.body.lastname}`
+          : undefined,
+      displayName: req.body.displayname,
+      address: req.body.address,
+      baptism: req.body.baptism ? moment(req.body.baptism).toDate() : undefined,
+      birth: req.body.birth ? moment(req.body.birth).toDate() : undefined,
+      phones: JSON.stringify(req.body.phones),
+      groupId: req.body.group,
+      archived: req.body.archived,
+    },
+  });
+
+  res.json(result);
+};
+
+export const createPreacher = async (
+  req: Request<
+    {},
+    {},
+    {
+      id: number;
+      group: number;
+      firstname: string;
+      lastname?: string;
+      displayname: string;
+      birth?: string | null;
+      baptism?: string | null;
+      address?: string;
+      phones?: string[];
+      tagIds?: number[];
+      archived?: boolean;
+    }
+  >,
+  res: Response
+) => {
+  const result = await prisma.preacher.create({
+    include: {
+      Tags: true,
+      Group: true,
+    },
+    data: {
       id: req.body.id,
       firstName: req.body.firstname,
       lastName: req.body.lastname,
       fullName: `${req.body.firstname} ${req.body.lastname}`,
       displayName: req.body.displayname,
       address: req.body.address,
-      baptism:
-        req.body.baptism !== null ? moment(req.body.baptism).toDate() : null,
-      birth: req.body.birth !== null ? moment(req.body.birth).toDate() : null,
-      phones: JSON.stringify(req.body.phones),
-      Tags: {
-        create: req.body.tagIds.map((tagId) => ({
-          Tag: {
-            connect: {
-              id: tagId,
-            },
-          },
-        })),
-      },
+      baptism: req.body.baptism ? moment(req.body.baptism).toDate() : null,
+      birth: req.body.birth ? moment(req.body.birth).toDate() : null,
+      phones: JSON.stringify(req.body.phones || "[]"),
       Group: {
         connectOrCreate: {
           where: { id: req.body.group },
           create: { id: req.body.group },
         },
       },
-    },
-    update: {
-      id: req.body.id,
-      firstName: req.body.firstname,
-      lastName: req.body.lastname,
-      fullName: `${req.body.firstname} ${req.body.lastname}`,
-      displayName: req.body.displayname,
-      //phones: JSON.stringify(req.body.phones),
-      address: req.body.address,
-      baptism:
-        req.body.baptism !== null ? moment(req.body.baptism).toDate() : null,
-      birth: req.body.birth !== null ? moment(req.body.birth).toDate() : null,
-      phones: JSON.stringify(req.body.phones),
-      Group: {
-        connectOrCreate: {
-          where: { id: req.body.group },
-          create: { id: req.body.group },
-        },
-      },
+      archived: req.body.archived || false,
     },
   });
 

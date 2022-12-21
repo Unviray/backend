@@ -5,7 +5,8 @@ import {
   getAllPreacher,
   getPreacher,
   getReturnedInfo,
-  setPreacher,
+  updatePreacher,
+  createPreacher,
 } from "./handlers/preacher";
 import {
   mainBoard,
@@ -33,7 +34,8 @@ interface Routes {
 const routes: Routes = {
   "/main-board": { get: mainBoard },
   "/preacher": { get: getAllPreacher },
-  "/preacher/:id": { get: getPreacher, post: setPreacher },
+  "/preacher/new": { post: createPreacher },
+  "/preacher/:id": { get: getPreacher, post: updatePreacher },
   "/report/:preacherId": { get: getReport, post: setReport },
   "/returned-info": { get: getReturnedInfo },
   "/returned-service/:id": { get: getReturnedService },

@@ -226,11 +226,18 @@ export const mainBoard = async (req: Request, res: Response) => {
 };
 
 export const getServiceYear = async (
-  req: Request<{}, {}, {}, { id: string }>,
+  req: Request<{}, {}, {}, { id: string; month: string }>,
   res: Response
 ) => {
-  const serviceYears = makeServiceYears(req.app.get("workingMonth"));
   const id = parseInt(req.query.id || "0");
+  const serviceYears = makeServiceYears(
+    req.query.month
+      ? {
+          month: +req.query.month.split("-")[0],
+          year: +req.query.month.split("-")[1],
+        }
+      : req.app.get("workingMonth")
+  );
 
   const result = [];
   for (const wm of serviceYears) {
