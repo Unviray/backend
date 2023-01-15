@@ -10,6 +10,7 @@ import moment from "moment";
 import Color from "color";
 
 import es21db from "../../../../.es21/db.json";
+import { TWorkingMonth } from "../src/types/month";
 
 const app = express();
 
@@ -142,6 +143,11 @@ const create_preacher = async (id: string, data: Es21) => {
         };
       };
     };
+    startMonth?: TWorkingMonth["month"];
+    startYear?: number;
+
+    endMonth?: TWorkingMonth["month"] | 0;
+    endYear?: number | 0;
   }[] = [];
 
   if (data.tombotsoa !== "") {
@@ -201,6 +207,10 @@ const create_preacher = async (id: string, data: Es21) => {
           },
         },
       },
+      startMonth: 1,
+      startYear: 2020,
+      endMonth: 0,
+      endYear: 0,
     });
   }
 
@@ -218,7 +228,9 @@ const create_preacher = async (id: string, data: Es21) => {
         firstName: data.fanampinanarana,
         phones: JSON.stringify(data.finday.filter((f) => f.length > 0)),
         address: data.adiresy,
-        birth: data.teraka ? moment.utc(data.teraka.split(":")[1]).toDate() : null,
+        birth: data.teraka
+          ? moment.utc(data.teraka.split(":")[1]).toDate()
+          : null,
         baptism: data.batisa
           ? moment.utc(data.batisa.split(":")[1]).toDate()
           : null,

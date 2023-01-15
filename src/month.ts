@@ -29,7 +29,10 @@ export class Month {
     };
   }
 
-  lessThan(toCompare: TWorkingMonth, equal?: boolean) {
+  lessThan(toCompare: TWorkingMonth | { month: 0; year: 0 }, equal?: boolean) {
+    if (toCompare.month === 0 && toCompare.year === 0) {
+      return true;
+    }
     if (this.value.year === toCompare.year) {
       return equal
         ? this.value.month <= toCompare.month
